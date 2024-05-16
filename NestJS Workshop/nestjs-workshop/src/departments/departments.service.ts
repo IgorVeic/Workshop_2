@@ -10,6 +10,7 @@ import { DepartmentCreateDto } from './dtos/department-create.dto';
 import { ICurrentUser } from '../types/current-user.interface';
 import { DepartmentUpdateDto } from './dtos/department-update.dto';
 
+
 @Injectable()
 export class DepartmentsService {
   constructor(
@@ -21,14 +22,14 @@ export class DepartmentsService {
 
   async getAllDepartments(
     pageOptionsDto: PageOptionsDto,
-    { departmentName, officeLocation }: DepartmentQueryDto,
+    { departmentName, officeLocation, isActive, minBudget, maxBudget }: DepartmentQueryDto,
   ): Promise<PageDto<Department>> {
     const queryBuilder =
       this.departmentRepository.createQueryBuilder('department');
 
     if (departmentName) {
-      queryBuilder.where('department.departmentName ILIKE = :departmentName', {
-        departmentName: `%${departmentName}%`,
+      queryBuilder.where('department.departmentName ILIKE :departmentName', {
+        departmentName: `%${departmentName}%`
       });
     }
 
@@ -36,6 +37,18 @@ export class DepartmentsService {
       queryBuilder.where('department.officeLocation ILIKE  :officeLocation', {
         officeLocation: `%${officeLocation}%`,
       });
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('department.isActive = :isActive', { isActive });
+    }
+
+    if (minBudget !== undefined) {
+      queryBuilder.andWhere('department.budget >= :minBudget', { minBudget });
+    }
+
+    if (maxBudget !== undefined) {
+      queryBuilder.andWhere('department.budget <= :maxBudget', { maxBudget });
     }
 
     queryBuilder
@@ -53,7 +66,11 @@ export class DepartmentsService {
   }
 
   async getDepartment(id: string): Promise<Department> {
-    return this.departmentRepository.findOneByOrFail({ id });
+    const singleDepartment = await this.departmentRepository.find({
+      where: { id },
+      relations: ["employees"]
+    });
+    return singleDepartment[0]
   }
 
   async createDepartment(

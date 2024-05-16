@@ -14,6 +14,7 @@ import {
   Min,
 } from "class-validator";
 import { PayType } from '../../common/enums/pay-type.enum';
+import { Unique } from 'typeorm';
 
 export class EmployeeUpdateDto {
 
@@ -31,6 +32,7 @@ export class EmployeeUpdateDto {
 
     @IsEmail()
     @IsNotEmpty()
+    @Unique(['email'])
     @ApiProperty({
         type: String,
         example: 'johndoe@gmail.com',
